@@ -9,21 +9,25 @@ import (
 
 func Static(root string) func(ctx *Context) {
     return func(ctx *Context) {
-        if ctx.Req.URL.Path == "" || ctx.Req.URL.Path == "/" {
+        reqURL := ctx.Req.URL.Path
+        if reqURL == "" || reqURL == "/" {
             http.ServeFile(ctx.Res, ctx.Req, filepath.Join(root, "index.html"))
         } else {
-            fileName := root + ctx.Req.URL.Path
-            f, err := os.Stat(fileName)
-            if err == nil {
+            fileName := root + reqURL
+            filePath, _ := filepath.Abs(fileName)
+            rootPath, _ := filepath.Abs(root)
+            fileDir := filepath.Dir(filePath)
+            f, err := os.Stat(filePath)
+            if err == nil && filepath.HasPrefix(fileDir, rootPath) {
                 if f.IsDir() {
-                    http.ServeFile(ctx.Res, ctx.Req, filepath.Join(fileName, "index.html"))
+                    http.ServeFile(ctx.Res, ctx.Req, filepath.Join(filePath, "index.html"))
                 } else {
-                    http.ServeFile(ctx.Res, ctx.Req, fileName)
+                    http.ServeFile(ctx.Res, ctx.Req, filePath)
                 }
                 ctx.Stop()
             } else {
-                ctx.Write([]byte("404 Not found"))
-                fmt.Println("Not found: " + fileName)
+                ctx.Write([]byte("Not Found"))
+                fmt.Println("Not Found: " + reqURL)
             }
         }
     }
