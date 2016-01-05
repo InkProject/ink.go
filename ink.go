@@ -5,7 +5,6 @@ import (
     "strings"
     "regexp"
     "fmt"
-    "crypto/rand"
 )
 
 /* data structure */
@@ -29,23 +28,17 @@ type Web struct {
     patternRegx regexp.Regexp
 }
 
-func GUID() string {
-    b := make([]byte, 16)
-    rand.Read(b)
-    return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-}
-
 /* private method */
 
 func (web *Web) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     matchMap, pattern := web.match(r.URL.Path)
     ctx := &Context{w, w, r, matchMap, make(map[string]interface{}), nil}
     allHandle := make([]Handle, 0)
-    handleAry1, ok1 := web.route[r.Method + ":*"]
+    handleAry1, ok1 := web.route[r.Method + ":" + pattern]
     if ok1 {
         allHandle = append(allHandle, handleAry1...)
     }
-    handleAry2, ok2 := web.route[r.Method + ":" + pattern]
+    handleAry2, ok2 := web.route[r.Method + ":*"]
     if ok2 {
         allHandle = append(allHandle, handleAry2...)
     }
@@ -69,6 +62,9 @@ func (web *Web) match(path string) (matchMap MatchMap, pattern string) {
     pathAry := web.patternRegx.FindAllString(path, -1)
     matchMap = make(map[string]string)
     for _, patternItem := range web.patternAry {
+        if len(pathAry) != len(patternItem) {
+            continue
+        }
         for j, patternKey := range patternItem {
             if j > len(pathAry) - 1 {
                 break
@@ -109,6 +105,14 @@ func (web *Web) Get(pattern string, handle Handle) {
 
 func (web *Web) Post(pattern string, handle Handle) {
     web.addHandle("POST", pattern, handle)
+}
+
+func (web *Web) Put(pattern string, handle Handle) {
+    web.addHandle("PUT", pattern, handle)
+}
+
+func (web *Web) Delete(pattern string, handle Handle) {
+    web.addHandle("DELETE", pattern, handle)
 }
 
 func (web *Web) Options(pattern string, handle Handle) {

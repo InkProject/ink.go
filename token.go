@@ -1,7 +1,9 @@
 package ink
 
 import (
+    "fmt"
     "time"
+    "crypto/rand"
 )
 
 var tokenMap map[string]typeToken
@@ -9,6 +11,12 @@ var tokenMap map[string]typeToken
 type typeToken struct {
     time time.Time
     data map[string]interface{}
+}
+
+func GUID() string {
+    b := make([]byte, 16)
+    rand.Read(b)
+    return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
 func (ctx *Context) TokenGet(key string) interface{} {
