@@ -99,6 +99,13 @@ func (web *Web) addHandle(method string, pattern string, handle Handle) {
 
 /* public api */
 
+func (web *Web) Use(handle Handle) {
+    methods := []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"}
+    for _, method := range methods {
+        web.addHandle(method, "*", handle)
+    }
+}
+
 func (web *Web) Get(pattern string, handle Handle) {
     web.addHandle("GET", pattern, handle)
 }

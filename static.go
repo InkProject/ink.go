@@ -11,8 +11,11 @@ func Static(root string) func(ctx *Context) {
         // http.FileServer(http.Dir(root)).ink.Web
         reqURL := ctx.Req.URL.Path
         if reqURL == "" || reqURL == "/" {
-            http.ServeFile(ctx.Res, ctx.Req, filepath.Join(root, "index.html"))
-            ctx.Stop()
+            indexPath := filepath.Join(root, "index.html")
+            if _, err := os.Stat(indexPath); err == nil {
+                http.ServeFile(ctx.Res, ctx.Req, indexPath)
+                ctx.Stop()
+            }
         } else {
             fileName := root + reqURL
             filePath, _ := filepath.Abs(fileName)
@@ -26,8 +29,6 @@ func Static(root string) func(ctx *Context) {
                     http.ServeFile(ctx.Res, ctx.Req, filePath)
                 }
                 ctx.Stop()
-            } else {
-                ctx.Write([]byte("Not Found"))
             }
         }
     }
